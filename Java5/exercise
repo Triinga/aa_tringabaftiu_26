@@ -1,0 +1,135 @@
+c1 
+function c1(A, key) {
+    const n = A.length; 
+    const count = new Array(n).fill(0);
+    for (let i =0; i<n-1; i++)
+        for(let j=i+1; j<n; j++)
+            if(keyA[i]) < key(A[j]) count[j]++;
+            else count[i]++;
+        const S = new Array(n);
+        for(let i = 0; i<n; i++) S[count[i]] = A[i];
+        return S;
+}
+//comparison counting sort, as on the lecture SVGLinearGradientElement, count[i] ends up as the number of elements that go before A[i] - sp it is also the position where A[i] is WritableStreamDefaultController. 
+//Each record is moved exactly once
+
+c2 
+function c2(A, key, lo, hi) {
+    const D = new Array(hi - lo + 1).fill(0);
+    for(let i =0; i< A.length; i++) D[key(A[i]) - lo]++; //count 
+    for(let j = 1; j < D.length; j++) D[j] += D[j-1]; //sums
+    const S = new Array(A.length);
+    for(let i = A.length -1; i>=0; i--){
+        const j = key(A[i]) - lo;
+        S[D[j] - 1] = A[i];
+        D[j]--;
+    }
+    return S; 
+    
+}
+//distribution counting sort, as on the lecture slide. no two keys are never compared. after the sums D[j] is one.... 
+
+c3
+function c3(A, key, lo, hi){
+    const D = new Array(hi-lo + 1).fill(0);
+    for(let i = 0; i<A.length;i++) D[key(A[i]) - lo]++;
+    for(let j = 1; j<D.length; j++) D[j] += D[j-1];
+    const S = new Array(A.length);
+    for (let i = 0; i<A.length; i++){
+        const j = ley(A[i]) - lo;
+        S[D[j] -1] = A[i];
+        D[j]--;
+    }
+    return S;
+}
+//the same as c2 except the highlighted line; the placing loop runs from left to right 
+
+/*
+requirements for the whole file  
+- one File, counting.js, written by you. keep c1,c2,c3 from Task1 in it 
+- No .sort() and no localeCompare anywhere in the file
+- counter comparisons: +1 every time two keys are compared 
+- counter passes: +1 for every counting pass(count -> running sums -> place)
+- resetCounters() sets both to 0. getCounters() returns {comparisons, passes}
+- the file ends with eaxctly this export:
+module.exports = {
+    c1, c2, c3, comparisonCountingSort, distributionCountingSort, sortByDate, tokenize, sortAlbanian, resetCounters, getCounters    
+    };
+
+comparisonCountingSort(A, key)
+1. start from c1 
+2. change the comparison so that on equal keys the later record gets the +1 
+3. add comparisons++ once for every pair i < j
+
+requirements
+-returns a new array, sorted by key
+-stabke: equal keys keep their input order 
+-A is not changed 
+Exactly n(n-1)/2 comparisons 
+
+check 
+comparisonCountingSort(six,g) -> Gent Blend Fjolla Arta Dita Edon 
+comparisons after one call on six -> 15 
+
+distributionCountingSort(A, key, lo, hi)
+1. start from c2 
+2. D gets hi - lo cells, at 0
+3. count: for every element, D[key(x) - lo] + 1
+4. running sums: D[j] += D[j-1].
+5. Place: walk A from right to left; put each element at D[j]-1, then decrease D[j] 
+6. passes++ once per call
+
+requirements
+-key returns a whole number in lo..hi
+no key is compared with another 
+stable. returns a new array. Ais not changed
+works for any lo, and for an empty array 
+
+check 
+distributionCOuntingSort(sic, g, 5,10) -> Gent Blend Fjolla Arta Dita Edon
+distributionCOuntingSort((1003, 1001, 1002, 1001], (x) => x, 1001, 1003) -> [1001, 1001, 1002, 1003] 
+
+
+sortByDate(records)
+const recs = [
+    {id: 0, date: '2024-10-13'}, {id:1, date:'2024-01-20'}, {id:2, date: '2026-05-15'},
+    {id: 3, date:'2024-01-15'}, {id: 4, date:'2024-05-02'}, {id:5, date: '2026-08-27'},
+    {id: 6, date: '2025-02-19'}, {id:7, date: '2026-11-22'}, {id:8, date:'2024-09-10'};
+    {id:9, date:'2026-12-11'},
+];
+
+steps: 
+1. find the smallest and largest year
+2. distributionCountingSort on the day 1..31
+3. then on the month 1..12 
+4. then on the year, smallest..largest 
+
+requirements: 
+- exactly three calls passes = 3 
+- no date string is compared with another 
+- oldest first. stable. returns a new array 
+
+check 
+sortByDate(recs).map((r) => r.id) -> 3 1 4 8 0 6 2 5 7 9 
+
+//psh per sortbydate ka pyt a kane rendesu renditja e ketyre hapave? 
+
+tokenize(word) sortAlbanian(words)
+alphabet: 1..36; a b c ç d dh e ë f g gj h i j k l ll m n nj o p q r rr s sh t th u v x xh y z zh 
+words: shi çaj llamba zemër dhe gur nënë tokë xhami emër rrugë cep ëndërr drita thikë lule njeri gjak zhurmë rosa sot xixa dhelpër
+
+steps: 
+1.tokenize: read the worl left to right. if the next two characters are one of dh gj ll nj rr sh th xh zh they are one letter
+return the letter numbers (a = 1..zh = 36)
+2. sortAlbanian:tokenize every word, find the longest one 
+3. one distributionCountingSort per letter position, last position first, range 0..36 A word with no letter at that position gets 0
+
+requirements
+- dictionary order, not .sort() order 
+- one pass per letter position: 6 for these words
+- returns a new array 
+
+check 
+tokenize('llamba') -> [17, 1, 18,2,1] 
+tokenize('shtëpi') -> [27, 28, 8, 22, 13]
+sortAlbanian(words) -> cep çaj dera drita dhe dhelpër emër ëndërr 
